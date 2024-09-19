@@ -1,0 +1,45 @@
+version: 0.2
+
+env:
+  variables:
+    TAG: v1
+    REPOSITORY_NAME: simple-python-app
+  parameter-store:
+    ECR_URL: ECR_URL
+    ECR_USERNAME: ECR_USERNAME
+    ECR_REGION: ECR_REGION
+        
+phases:
+  install:
+    on-failure: ABORT
+    runtime-versions:
+      runtime: 
+        python: 3.11
+    finally:
+      - echo "Installed python 3.11 version"
+    
+  pre_build:
+    commands:
+      - pip install -r requirements.txt
+      - aws ecr get-login-password --region $ECR_REGION --debug| docker login --username $ECR_USERNAME --password-stdin $ECR_URL
+    finally:
+      - echo  "installed python dependencies & logged in to aws ecr"
+
+  build:
+    commands:
+      - echo "Running python docker image creation"
+      - pwd
+      - ls -lart
+      - docker build -t $REPOSITORY_NAME:$TAG .
+      - docker tag $REPOSITORY_NAME:$TAG $ECR_URL/$REPOSITORY_NAME:$TAG
+      - docker push $ECR_URL/$REPOSITORY_NAME:$TAG
+
+  post_build:
+    commands:
+      - echo "Build completed sucessfully !!"
+    
+artifacts:
+  files:
+    - app.py
+  name: simple-python-app
+  discard-paths: no
