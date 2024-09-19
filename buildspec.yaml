@@ -13,7 +13,6 @@ phases:
   install:
     on-failure: ABORT
     runtime-versions:
-      runtime: 
         python: 3.11
     finally:
       - echo "Installed python 3.11 version"
